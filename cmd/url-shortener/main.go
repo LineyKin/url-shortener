@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"url-shortener/internal/config"
@@ -30,7 +31,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	_ = storage
+	newUrl, err := storage.GetURL("google")
+	if err != nil {
+		log.Error("failed to get url", sl.Err(err))
+		os.Exit(1)
+	}
+
+	fmt.Println("newUrl", newUrl)
 
 	// TODO init router - chi chi-render
 
