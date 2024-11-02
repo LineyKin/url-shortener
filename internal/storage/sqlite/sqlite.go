@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"url-shortener/internal/storage"
 
-	_ "modernc.org/sqlite" // init sqlite driver
+	//_ "modernc.org/sqlite" // init sqlite driver
+
+	sqlite3 "github.com/mattn/go-sqlite3" // init sqlite3 driver // go env -w CGO_ENABLED=1 + download gcc + add path
 )
+
+// CScYRjbgNa
 
 type Storage struct {
 	db *sql.DB
@@ -19,7 +23,7 @@ func New(storagePath string) (*Storage, error) {
 	// для дирекции ошибок
 	const op = "storage.sqlite.New"
 
-	db, err := sql.Open("sqlite", storagePath)
+	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -58,6 +62,11 @@ func (s *Storage) SaveURL(urlToSave, alias string) (int64, error) {
 	res, err := stmt.Exec(urlToSave, alias)
 	if err != nil {
 		// TODO проработать ошибку одиннаковых алиасов
+
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return 0, fmt.Errorf("%s: %w", op, storage.ErrUrlExists)
+		}
+
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
